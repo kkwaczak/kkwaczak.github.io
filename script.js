@@ -1,6 +1,4 @@
-/**
- * KONFIGURACJA UKŁADU WSPÓŁRZĘDNYCH
- */
+/* Konfiguracja ukladu wspolrzednych */
 var warstwaKonfig = {
     "minX": 7340000.0,
     "minY": 5700000.0,
@@ -18,41 +16,36 @@ var warstwaKonfig = {
     ]
 };
 
-var resolutions = warstwaKonfig.zoomLevels.map(function(l) { 
-    return l.tileWidth / 256; 
-});
+var resolutions = [];
+for (var r = 0; r < warstwaKonfig.zoomLevels.length; r++) {
+    resolutions.push(warstwaKonfig.zoomLevels[r].tileWidth / 256);
+}
 
-var crs2178 = new L.Proj.CRS('EPSG:2178', "+proj=tmerc +lat_0=0 +lon_0=21 +k=0.999923 +x_0=7500000 +y_0=0 +ellps=GRS80 +units=m +no_defs", {
+var crs2178 = new L.Proj.CRS("EPSG:2178", "+proj=tmerc +lat_0=0 +lon_0=21 +k=0.999923 +x_0=7500000 +y_0=0 +ellps=GRS80 +units=m +no_defs", {
     resolutions: resolutions,
     origin: [warstwaKonfig.minX, warstwaKonfig.minY]
 });
 
-/**
- * DEFINICJA MAPY WARSZAWY
- */
+/* Definicja kafelkow */
 L.PodkladWarszawski = L.TileLayer.extend({
     getTileUrl: function(coords) {
         var x = coords.x;
         var y = -coords.y - 1;
         var z = coords.z;
         if (y < 0 || x < 0) return "";
-        var url = "https://testmapa.um.warszawa.pl/mapviewer/mcserver?request=gettile&format=PNG";
-        url += "&zoomlevel=" + z;
-        url += "&mapcache=" + this.options.mapname;
-        url += "&mx=" + x;
-        url += "&my=" + y;
-        return url;
+        var base = "https://testmapa.um.warszawa.pl/mapviewer/mcserver?request=gettile&format=PNG";
+        return base + "&zoomlevel=" + z + "&mapcache=" + this.options.mapname + "&mx=" + x + "&my=" + y;
     }
 });
 
 var baseMaps = {
-    "Lindley": new L.PodkladWarszawski('', { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.LINDLEY_2500_S" }),
-    "Plan 1936": new L.PodkladWarszawski('', { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_1936" }),
-    "Plan BOS": new L.PodkladWarszawski('', { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_BOS" }),
-    "Wektor": new L.PodkladWarszawski('', { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" })
+    "Lindley": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.LINDLEY_2500_S" }),
+    "Plan 1936": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_1936" }),
+    "Plan BOS": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_BOS" }),
+    "Wektor": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" })
 };
 
-var map = L.map('map', {
+var map = L.map("map", {
     crs: crs2178,
     layers: [baseMaps["Lindley"]]
 }).setView([52.2210, 21.0150], 16);
@@ -60,9 +53,7 @@ var map = L.map('map', {
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
 var markersLayer = new L.LayerGroup().addTo(map);
 
-/**
- * LOGIKA WYŚWIETLANIA
- */
+/* Funkcje */
 window.zoomToPoint = function(lat, lon) {
     map.setView([lat, lon], 17);
 };
@@ -70,20 +61,20 @@ window.zoomToPoint = function(lat, lon) {
 function addMarkerToMap(hip, lat, lon) {
     var marker = L.circleMarker([lat, lon], {
         radius: 6,
-        color: '#ffffff',
-        fillColor: '#007bff',
+        color: "#ffffff",
+        fillColor: "#007bff",
         fillOpacity: 0.9,
         weight: 2
     });
     marker.options.title = hip.toString();
-    marker.bindPopup("<strong>Numer HIP: " + hip + "</strong>");
+    marker.bindPopup("<b>Numer HIP: " + hip + "</b>");
     markersLayer.addLayer(marker);
 }
 
 function renderTable(points) {
-    var tbody = document.querySelector('#points-table tbody');
+    var tbody = document.querySelector("#points-table tbody");
     if (!tbody) return;
-    tbody.innerHTML = '';
+    tbody.innerHTML = "";
     
     points.sort(function(a, b) {
         return a.hip.toString().localeCompare(b.hip.toString(), undefined, { numeric: true });
@@ -91,18 +82,16 @@ function renderTable(points) {
 
     for (var i = 0; i < points.length; i++) {
         var p = points[i];
-        var row = document.createElement('tr');
-        var link = '<a href="#" class="point-link" onclick="zoomToPoint(' + p.gps.lat + ',' + p.gps.lon + '); return false;">' + p.hip + '</a>';
-        row.innerHTML = '<td>' + link + '</td>';
-        tbody.appendChild(row);
+        var tr = document.createElement("tr");
+        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + "); return false;'>" + p.hip + "</a></td>";
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
     }
 }
 
-/**
- * POBIERANIE DANYCH
- */
-fetch('hip.txt')
-    .then(function(res) { return res.json(); })
+/* Wczytywanie danych z hip.txt */
+fetch("hip.txt")
+    .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data && data.hipy) {
             for (var j = 0; j < data.hipy.length; j++) {
@@ -113,18 +102,16 @@ fetch('hip.txt')
         }
     })
     .catch(function(err) {
-        console.log("Blad:", err);
+        console.log("Blad wczytywania:", err);
     });
 
-/**
- * SZUKAJKA
- */
+/* Wyszukiwarka */
 var searchControl = new L.Control.Search({
     layer: markersLayer,
-    propertyName: 'title',
+    propertyName: "title",
     initial: false,
     zoom: 18,
     marker: false,
-    textPlaceholder: 'Szukaj...'
+    textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
