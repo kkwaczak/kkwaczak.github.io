@@ -120,17 +120,16 @@ window.deletePoint = function(hip) {
     }
 };
 
-// --- START: WCZYTYWANIE DANYCH Z PLIKU hip.txt (Struktura JSON) ---
-function loadData() {
-    fetch('hip.txt')
-        .then(response => {
-            if (!response.ok) throw new Error('Nie można załadować pliku hip.txt');
-            return response.json();
-        })
-        .then(data => {
-            // Używamy data["hip"] zgodnie ze strukturą pliku
-            if (data && data["hip"]) {
-                allPoints = data["hip"];
+// --- WCZYTYWANIE DANYCH Z PLIKU hip.txt ---
+fetch('hip.txt')
+    .then(response => response.text()) // Wczytujemy jako tekst, by oczyścić go z tagów [source]
+    .then(text => {
+        // Czyścimy tekst z tagów "", jeśli występują w pliku
+        const cleanJson = text.replace(/\/g, '');
+        try {
+            const data = JSON.parse(cleanJson);
+            if (data.hipy) {
+                allPoints = data.hipy;
                 allPoints.forEach(item => {
                     if (item.gps && item.gps.lat && item.gps.lon) {
                         addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
@@ -138,9 +137,11 @@ function loadData() {
                 });
                 renderTable();
             }
-        })
-        .catch(err => console.error("Błąd wczytywania punktów:", err));
-}
+        } catch (e) {
+            console.error("Błąd parsowania pliku hip.txt. Upewnij się, że to poprawny JSON.", e);
+        }
+    })
+    .catch(err => console.error("Nie udało się wczytać pliku hip.txt:", err));
 
 loadData();
 
@@ -168,4 +169,3 @@ map.on('click', function(e) {
 });
 
 map.addControl(new L.Control.Search({ layer: markersLayer, initial: false, zoom: 15, marker: false }));
-
