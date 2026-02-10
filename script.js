@@ -68,7 +68,7 @@ function addMarkerToMap(hip, lat, lon) {
         weight: 2
     });
     marker.options.title = hip.toString();
-    marker.bindPopup("<b>Numer HIP: " + hip + "</b>");
+    marker.bindPopup("<b>hip." + hip + "</b>");
     markersLayer.addLayer(marker);
     return marker;
 }
@@ -128,3 +128,4 @@ var searchControl = new L.Control.Search({
     textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
+
