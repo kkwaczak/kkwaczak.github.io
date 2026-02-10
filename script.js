@@ -128,9 +128,9 @@ function loadData() {
             return response.json();
         })
         .then(data => {
-            // Używamy data["hip."] zgodnie ze strukturą pliku
-            if (data && data["hip."]) {
-                allPoints = data["hip."];
+            // Używamy data["hip"] zgodnie ze strukturą pliku
+            if (data && data["hip"]) {
+                allPoints = data["hip"];
                 allPoints.forEach(item => {
                     if (item.gps && item.gps.lat && item.gps.lon) {
                         addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
@@ -168,3 +168,4 @@ map.on('click', function(e) {
 });
 
 map.addControl(new L.Control.Search({ layer: markersLayer, initial: false, zoom: 15, marker: false }));
+
