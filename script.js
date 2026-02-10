@@ -90,6 +90,7 @@ function renderTable() {
     });
 }
 
+// Funkcja dodająca marker (niebieska kropka 5px)
 function addMarkerToMap(hipNumber, lat, lon) {
     var marker = L.circleMarker([lat, lon], {
         radius: 5.0,          
@@ -120,11 +121,11 @@ window.deletePoint = function(hip) {
     }
 };
 
-// --- WCZYTYWANIE DANYCH Z PLIKU hip.txt ---
+// --- START: WCZYTYWANIE DANYCH Z PLIKU hip.txt ---
 fetch('hip.txt')
-    .then(response => response.text()) // Wczytujemy jako tekst, by oczyścić go z tagów [source]
+    .then(response => response.text())
     .then(text => {
-        // Czyścimy tekst z tagów "", jeśli występują w pliku
+        // Usuwamy tagi przed parsowaniem JSON
         const cleanJson = text.replace(/\/g, '');
         try {
             const data = JSON.parse(cleanJson);
@@ -138,14 +139,12 @@ fetch('hip.txt')
                 renderTable();
             }
         } catch (e) {
-            console.error("Błąd parsowania pliku hip.txt. Upewnij się, że to poprawny JSON.", e);
+            console.error("Błąd parsowania JSON z hip.txt:", e);
         }
     })
-    .catch(err => console.error("Nie udało się wczytać pliku hip.txt:", err));
+    .catch(err => console.error("Nie udało się pobrać pliku hip.txt:", err));
 
-loadData();
-
-// --- OBSŁUGA KLIKNIĘCIA (DODAWANIE NOWYCH) ---
+// Kliknięcie na mapę
 map.on('click', function(e) {
     var hip = prompt("Podaj numer HIP: ");
     if (hip && hip.trim() !== "") {
