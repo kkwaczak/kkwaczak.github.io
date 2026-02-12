@@ -72,7 +72,7 @@ var warszawaWektor = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.
 
 /* Obiekt z warstwami do przełączania */
 var baseMaps = {
-    "Plan inwentarycazji zniszczeń z lat 1945-1946": planBos,
+    "Plan inwentaryzacji zniszczeń z lat 1945-1946": planBos,
     "Plan z 1936": plan1936,
     "Plan Lindleya z lat 1891-1908": lindley1,
     "Plan Lindleya z lat 1896-1906": lindley2,
@@ -161,6 +161,7 @@ var searchControl = new L.Control.Search({
     textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
+
 
 
 
