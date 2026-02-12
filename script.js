@@ -68,38 +68,42 @@ var map = L.map("map", {
     crs: crs2178,
     continuousWorld: true,
     worldCopyJump: false,
-    layers: [lindley4] 
+    layers: [plan1936] 
 }).setView([52.2210, 21.0150], 16);
 
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
 
 var markersLayer = new L.LayerGroup().addTo(map);
-var allPoints = []; // Przechowuje wszystkie wczytane punkty
+var allPoints = []; 
 
 /* Funkcje obsługi interfejsu */
-window.zoomToPoint = function(lat, lon) {
-    map.setView([lat, lon], 17);
-};
 
-function addMarkerToMap(hip, lat, lon) {
+// Funkcja wywoływana po kliknięciu w punkt w tabeli
+window.zoomToPoint = function(lat, lon, hip) {
+    // 1. Czyścimy poprzednie markery
+    markersLayer.clearLayers();
+    
+    // 2. Dodajemy tylko ten jeden konkretny marker
     var marker = L.circleMarker([lat, lon], {
-        radius: 3,
+        radius: 6,
         color: "#ffffff",
         fillColor: "#007bff",
         fillOpacity: 0.9,
-        weight: 0
+        weight: 2
     });
-    marker.options.title = hip.toString();
     marker.bindPopup("<b>hip." + hip + "</b>");
     markersLayer.addLayer(marker);
-}
+    
+    // 3. Centrujemy mapę i otwieramy popup
+    map.setView([lat, lon], 17);
+    marker.openPopup();
+};
 
 function renderTable(points) {
     var tbody = document.querySelector("#points-table tbody");
     if (!tbody) return;
     tbody.innerHTML = "";
     
-    // Sortowanie numeryczne
     var sortedPoints = points.slice().sort(function(a, b) {
         return a.hip.toString().localeCompare(b.hip.toString(), undefined, { numeric: true });
     });
@@ -107,13 +111,13 @@ function renderTable(points) {
     for (var i = 0; i < sortedPoints.length; i++) {
         var p = sortedPoints[i];
         var tr = document.createElement("tr");
-        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + "); return false;'>" + p.hip + "</a></td>";
+        // Przekazujemy również numer HIP do funkcji zoomToPoint
+        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\"); return false;'>" + p.hip + "</a></td>";
         tr.innerHTML = html;
         tbody.appendChild(tr);
     }
 }
 
-/* Wyszukiwarka nad tabelą */
 function setupTableSearch() {
     var table = document.querySelector("#points-table");
     if (!table) return;
@@ -124,7 +128,6 @@ function setupTableSearch() {
     searchInput.placeholder = "Filtruj listę punktów...";
     searchInput.style = "width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;";
     
-    // Wstawienie przed tabelą
     table.parentNode.insertBefore(searchInput, table);
 
     searchInput.addEventListener("input", function(e) {
@@ -142,23 +145,13 @@ fetch("hip.txt")
     .then(function(data) {
         if (data && data.hipy) {
             allPoints = data.hipy;
-            var bounds = []; 
             
-            for (var j = 0; j < allPoints.length; j++) {
-                var item = allPoints[j];
-                addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
-                bounds.push([item.gps.lat, item.gps.lon]);
-            }
-            
+            // Inicjalizujemy tylko tabelę i wyszukiwarkę
+            // NIE dodajemy tutaj markerów do mapy ani nie używamy fitBounds
             setupTableSearch();
             renderTable(allPoints);
-
-            if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
         }
     })
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
-
