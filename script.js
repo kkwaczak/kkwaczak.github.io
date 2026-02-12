@@ -26,34 +26,79 @@ var crs2178 = new L.Proj.CRS("EPSG:2178", "+proj=tmerc +lat_0=0 +lon_0=21 +k=0.9
     origin: [warstwaKonfig.minX, warstwaKonfig.minY]
 });
 
-/* Definicja kafelkow */
+/* Definicja kafelkow (zaktualizowana klasa) */
 L.PodkladWarszawski = L.TileLayer.extend({
     getTileUrl: function(coords) {
         var x = coords.x;
         var y = -coords.y - 1;
         var z = coords.z;
         if (y < 0 || x < 0) return "";
+        
+        // Bazowy URL serwera map UM Warszawa
         var base = "https://testmapa.um.warszawa.pl/mapviewer/mcserver?request=gettile&format=PNG";
         return base + "&zoomlevel=" + z + "&mapcache=" + this.options.mapname + "&mx=" + x + "&my=" + y;
     }
 });
 
-var baseMaps = {
-    "Lindley": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.LINDLEY_2500_S" }),
-    "Plan 1936": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_1936" }),
-    "Plan BOS": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.PLAN_BOS" }),
-    "Wektor": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" })
+/* Definicja instancji warstw */
+var commonOptions = {
+    minZoom: 0,
+    maxZoom: resolutions.length - 1,
+    noWrap: true,
+    continuousWorld: true
 };
 
+// 1. Lindley (Ogólny)
+var lindley1 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY" }, commonOptions));
+
+// 2. Lindley 2500 H
+var lindley2 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_H" }, commonOptions));
+
+// 3. Lindley 2500 S 1900
+var lindley3 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_S_1900" }, commonOptions));
+
+// 4. Lindley 2500 S (Standard)
+var lindley4 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_S" }, commonOptions));
+
+// 5. Plan BOS
+var planBos = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_BOS" }, commonOptions));
+
+// 6. Plan 1936
+var plan1936 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_1936" }, commonOptions));
+
+// 7. Wektor (Współczesny)
+var warszawaWektor = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" }, commonOptions));
+
+
+/* Obiekt z warstwami do przełączania */
+var baseMaps = {
+    "Lindley (Ogólny)": lindley1,
+    "Lindley (2500 H)": lindley2,
+    "Lindley (1900 S)": lindley3,
+    "Lindley (2500 S)": lindley4,
+    "Plan 1936": plan1936,
+    "Plan BOS": planBos,
+    "Wektor (Współczesny)": warszawaWektor
+};
+
+/* Inicjalizacja mapy */
+// Domyślnie ładujemy 'Plan 1936' tak jak w Twoim nowym kodzie, 
+// ale ustawiam widok na centrum Warszawy w wyższym przybliżeniu (16), 
+// żeby było widać numery HIP (zoom 10 jest zbyt oddalony dla tej skali).
 var map = L.map("map", {
     crs: crs2178,
-    layers: [baseMaps["Lindley"]]
+    continuousWorld: true,
+    worldCopyJump: false,
+    layers: [plan1936] 
 }).setView([52.2210, 21.0150], 16);
 
+// Dodanie kontrolki warstw (przełącznik w rogu)
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
+
+// Warstwa na markery
 var markersLayer = new L.LayerGroup().addTo(map);
 
-/* Funkcje */
+/* Funkcje obsługi interfejsu */
 window.zoomToPoint = function(lat, lon) {
     map.setView([lat, lon], 17);
 };
@@ -76,6 +121,7 @@ function renderTable(points) {
     if (!tbody) return;
     tbody.innerHTML = "";
     
+    // Sortowanie numeryczne
     points.sort(function(a, b) {
         return a.hip.toString().localeCompare(b.hip.toString(), undefined, { numeric: true });
     });
@@ -102,10 +148,10 @@ fetch("hip.txt")
         }
     })
     .catch(function(err) {
-        console.log("Blad wczytywania:", err);
+        console.log("Blad wczytywania danych:", err);
     });
 
-/* Wyszukiwarka */
+/* Wyszukiwarka (korzysta z markersLayer) */
 var searchControl = new L.Control.Search({
     layer: markersLayer,
     propertyName: "title",
@@ -115,4 +161,3 @@ var searchControl = new L.Control.Search({
     textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
-
