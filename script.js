@@ -68,7 +68,7 @@ var map = L.map("map", {
     crs: crs2178,
     continuousWorld: true,
     worldCopyJump: false,
-    layers: [plan1936] 
+    layers: [lindley4] 
 }).setView([52.2210, 21.0150], 16);
 
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
@@ -155,3 +155,4 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
+
