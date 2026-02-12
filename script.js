@@ -68,7 +68,7 @@ var map = L.map("map", {
     crs: crs2178,
     continuousWorld: true,
     worldCopyJump: false,
-    layers: [plan1936] 
+    layers: [lindley4] 
 }).setView([52.2210, 21.0150], 16);
 
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
@@ -83,11 +83,11 @@ window.zoomToPoint = function(lat, lon) {
 
 function addMarkerToMap(hip, lat, lon) {
     var marker = L.circleMarker([lat, lon], {
-        radius: 6,
+        radius: 3,
         color: "#ffffff",
         fillColor: "#007bff",
         fillOpacity: 0.9,
-        weight: 2
+        weight: 0
     });
     marker.options.title = hip.toString();
     marker.bindPopup("<b>hip." + hip + "</b>");
@@ -161,3 +161,4 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
+
