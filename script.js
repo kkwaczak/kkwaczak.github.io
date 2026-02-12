@@ -82,9 +82,8 @@ var baseMaps = {
 };
 
 /* Inicjalizacja mapy */
-// Domyślnie ładujemy 'Plan 1936' tak jak w Twoim nowym kodzie, 
-// ale ustawiam widok na centrum Warszawy w wyższym przybliżeniu (16), 
-// żeby było widać numery HIP (zoom 10 jest zbyt oddalony dla tej skali).
+// Domyślnie ładujemy 'Plan 1936'
+// View ustawiony wstępnie, ale zostanie nadpisany po wczytaniu punktów
 var map = L.map("map", {
     crs: crs2178,
     continuousWorld: true,
@@ -140,30 +139,25 @@ fetch("hip.txt")
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data && data.hipy) {
+            var bounds = []; // Tablica na współrzędne wszystkich punktów
+            
             for (var j = 0; j < data.hipy.length; j++) {
                 var item = data.hipy[j];
                 addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
+                
+                // Dodajemy współrzędne do tablicy granic
+                bounds.push([item.gps.lat, item.gps.lon]);
             }
             renderTable(data.hipy);
+
+            // Po wczytaniu wszystkich punktów, ustaw widok mapy tak, aby je obejmował
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
         }
     })
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
 
-/* Wyszukiwarka (korzysta z markersLayer) */
-var searchControl = new L.Control.Search({
-    layer: markersLayer,
-    propertyName: "title",
-    initial: false,
-    zoom: 18,
-    marker: false,
-    textPlaceholder: "Szukaj HIP..."
-});
-map.addControl(searchControl);
-
-
-
-
-
-
+/* Wyszukiwarka usunięta zgodnie z życzeniem */
