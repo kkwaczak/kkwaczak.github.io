@@ -95,7 +95,7 @@ window.zoomToPoint = function(lat, lon, hip) {
     markersLayer.addLayer(marker);
     
     // 3. Centrujemy mapę i otwieramy popup
-    map.setView([lat, lon], 10);
+    map.setView([lat, lon], 15);
     marker.openPopup();
 };
 
@@ -155,5 +155,6 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
+
 
 
