@@ -73,7 +73,7 @@ var warszawaWektor = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.
 /* Obiekt z warstwami do przełączania */
 var baseMaps = {
     "Lindley (Ogólny)": lindley1,
-    "Lindley (2500 H)": lindley2,
+    "Plan Lindleya z 1896-1906": lindley2,
     "Lindley (1900 S)": lindley3,
     "Lindley (2500 S)": lindley4,
     "Plan 1936": plan1936,
@@ -161,3 +161,4 @@ var searchControl = new L.Control.Search({
     textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
+
