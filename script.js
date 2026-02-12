@@ -61,7 +61,7 @@ var baseMaps = {
     "Plan Lindleya z lat 1896-1906": lindley2,
     "Plan Lindleya z lat 1897-1901": lindley4,
     "Plan Lindleya z lat 1900-1901": lindley3,    
-    "OSM": warszawaWektor
+    "Podkład warszawski": warszawaWektor
 };
 
 var map = L.map("map", {
@@ -155,6 +155,7 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
+
 
 
 
