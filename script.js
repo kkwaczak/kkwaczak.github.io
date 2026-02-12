@@ -45,11 +45,10 @@ var baseMaps = {
     "Wektor": new L.PodkladWarszawski("", { minZoom: 0, maxZoom: 18, mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" })
 };
 
-/* Inicjalizacja mapy bez sztywnego setView na starcie (fitBounds zrobi to pozniej) */
 var map = L.map("map", {
     crs: crs2178,
     layers: [baseMaps["Lindley"]]
-}).setView([52.2210, 21.0150], 16); 
+}).setView([52.2210, 21.0150], 16);
 
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
 var markersLayer = new L.LayerGroup().addTo(map);
@@ -68,9 +67,8 @@ function addMarkerToMap(hip, lat, lon) {
         weight: 2
     });
     marker.options.title = hip.toString();
-    marker.bindPopup("<b>hip. " + hip + "</b>");
+    marker.bindPopup("<b>hip." + hip + "</b>");
     markersLayer.addLayer(marker);
-    return marker;
 }
 
 function renderTable(points) {
@@ -91,27 +89,16 @@ function renderTable(points) {
     }
 }
 
-/* Wczytywanie danych z hip.txt i dopasowanie widoku */
+/* Wczytywanie danych z hip.txt */
 fetch("hip.txt")
     .then(function(response) { return response.json(); })
     .then(function(data) {
-        if (data && data.hipy && data.hipy.length > 0) {
-            var latlngs = []; // Tablica do przechowywania wspolrzednych dla fitBounds
-
+        if (data && data.hipy) {
             for (var j = 0; j < data.hipy.length; j++) {
                 var item = data.hipy[j];
-                if(item.gps && item.gps.lat && item.gps.lon) {
-                    addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
-                    latlngs.push([item.gps.lat, item.gps.lon]);
-                }
+                addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
             }
             renderTable(data.hipy);
-
-            // DOPASOWANIE WIDOKU MAPY
-            if (latlngs.length > 0) {
-                var bounds = L.latLngBounds(latlngs);
-                map.fitBounds(bounds, { padding: [50, 50] }); 
-            }
         }
     })
     .catch(function(err) {
@@ -125,8 +112,7 @@ var searchControl = new L.Control.Search({
     initial: false,
     zoom: 18,
     marker: false,
-    textPlaceholder: "Szukaj..."
+    textPlaceholder: "Szukaj HIP..."
 });
 map.addControl(searchControl);
-
 
