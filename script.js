@@ -26,7 +26,7 @@ var crs2178 = new L.Proj.CRS("EPSG:2178", "+proj=tmerc +lat_0=0 +lon_0=21 +k=0.9
     origin: [warstwaKonfig.minX, warstwaKonfig.minY]
 });
 
-/* Definicja kafelkow (zaktualizowana klasa) */
+/* Definicja kafelkow */
 L.PodkladWarszawski = L.TileLayer.extend({
     getTileUrl: function(coords) {
         var x = coords.x;
@@ -34,13 +34,11 @@ L.PodkladWarszawski = L.TileLayer.extend({
         var z = coords.z;
         if (y < 0 || x < 0) return "";
         
-        // Bazowy URL serwera map UM Warszawa
         var base = "https://testmapa.um.warszawa.pl/mapviewer/mcserver?request=gettile&format=PNG";
         return base + "&zoomlevel=" + z + "&mapcache=" + this.options.mapname + "&mx=" + x + "&my=" + y;
     }
 });
 
-/* Definicja instancji warstw */
 var commonOptions = {
     minZoom: 0,
     maxZoom: resolutions.length - 1,
@@ -48,29 +46,14 @@ var commonOptions = {
     continuousWorld: true
 };
 
-// 1. Lindley (Ogólny)
 var lindley1 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY" }, commonOptions));
-
-// 2. Lindley 2500 H
 var lindley2 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_H" }, commonOptions));
-
-// 3. Lindley 2500 S 1900
 var lindley3 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_S_1900" }, commonOptions));
-
-// 4. Lindley 2500 S (Standard)
 var lindley4 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.LINDLEY_2500_S" }, commonOptions));
-
-// 5. Plan BOS
 var planBos = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_BOS" }, commonOptions));
-
-// 6. Plan 1936
 var plan1936 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_1936" }, commonOptions));
-
-// 7. Wektor (Współczesny)
 var warszawaWektor = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" }, commonOptions));
 
-
-/* Obiekt z warstwami do przełączania */
 var baseMaps = {
     "Plan inwentaryzacji zniszczeń z lat 1945-1946": planBos,
     "Plan z 1936": plan1936,
@@ -81,9 +64,6 @@ var baseMaps = {
     "OSM": warszawaWektor
 };
 
-/* Inicjalizacja mapy */
-// Domyślnie ładujemy 'Plan 1936'
-// View ustawiony wstępnie, ale zostanie nadpisany po wczytaniu punktów
 var map = L.map("map", {
     crs: crs2178,
     continuousWorld: true,
@@ -91,11 +71,10 @@ var map = L.map("map", {
     layers: [plan1936] 
 }).setView([52.2210, 21.0150], 16);
 
-// Dodanie kontrolki warstw (przełącznik w rogu)
 L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
 
-// Warstwa na markery
 var markersLayer = new L.LayerGroup().addTo(map);
+var allPoints = []; // Przechowuje wszystkie wczytane punkty
 
 /* Funkcje obsługi interfejsu */
 window.zoomToPoint = function(lat, lon) {
@@ -121,12 +100,12 @@ function renderTable(points) {
     tbody.innerHTML = "";
     
     // Sortowanie numeryczne
-    points.sort(function(a, b) {
+    var sortedPoints = points.slice().sort(function(a, b) {
         return a.hip.toString().localeCompare(b.hip.toString(), undefined, { numeric: true });
     });
 
-    for (var i = 0; i < points.length; i++) {
-        var p = points[i];
+    for (var i = 0; i < sortedPoints.length; i++) {
+        var p = sortedPoints[i];
         var tr = document.createElement("tr");
         var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + "); return false;'>" + p.hip + "</a></td>";
         tr.innerHTML = html;
@@ -134,23 +113,46 @@ function renderTable(points) {
     }
 }
 
+/* Wyszukiwarka nad tabelą */
+function setupTableSearch() {
+    var table = document.querySelector("#points-table");
+    if (!table) return;
+
+    var searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.id = "table-search";
+    searchInput.placeholder = "Filtruj listę punktów...";
+    searchInput.style = "width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;";
+    
+    // Wstawienie przed tabelą
+    table.parentNode.insertBefore(searchInput, table);
+
+    searchInput.addEventListener("input", function(e) {
+        var term = e.target.value.toLowerCase();
+        var filtered = allPoints.filter(function(p) {
+            return p.hip.toString().toLowerCase().indexOf(term) > -1;
+        });
+        renderTable(filtered);
+    });
+}
+
 /* Wczytywanie danych z hip.txt */
 fetch("hip.txt")
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data && data.hipy) {
-            var bounds = []; // Tablica na współrzędne wszystkich punktów
+            allPoints = data.hipy;
+            var bounds = []; 
             
-            for (var j = 0; j < data.hipy.length; j++) {
-                var item = data.hipy[j];
+            for (var j = 0; j < allPoints.length; j++) {
+                var item = allPoints[j];
                 addMarkerToMap(item.hip, item.gps.lat, item.gps.lon);
-                
-                // Dodajemy współrzędne do tablicy granic
                 bounds.push([item.gps.lat, item.gps.lon]);
             }
-            renderTable(data.hipy);
+            
+            setupTableSearch();
+            renderTable(allPoints);
 
-            // Po wczytaniu wszystkich punktów, ustaw widok mapy tak, aby je obejmował
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50] });
             }
@@ -159,5 +161,3 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
-
-/* Wyszukiwarka usunięta zgodnie z życzeniem */
