@@ -116,7 +116,7 @@ function renderTable(points) {
     // AKTUALIZACJA LICZNIKA
     var counter = document.getElementById("points-counter");
     if (counter) {
-        counter.innerText = "Wyświetlono: " + points.length + " punktów";
+        counter.innerText ="Dodano: " + points.length + " punktów";
     }
     
     var sortedPoints = points.slice().sort(function(a, b) {
@@ -231,3 +231,4 @@ fetch("hip.txt")
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
+
