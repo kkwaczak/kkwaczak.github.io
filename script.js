@@ -75,13 +75,22 @@ L.control.layers(baseMaps).setPosition("bottomleft").addTo(map);
 
 var markersLayer = new L.LayerGroup().addTo(map);
 var allPoints = []; 
+var areAllPointsVisible = false; // Flaga stanu przycisku
 
 /* Funkcje obsługi interfejsu */
 
+// Funkcja pomocnicza do resetowania przycisku "Pokaż wszystkie"
+function resetButtonState() {
+    areAllPointsVisible = false;
+    var btn = document.getElementById("toggle-all-btn");
+    if (btn) btn.innerText = "Pokaż wszystkie punkty na mapie";
+}
+
 // Funkcja wywoływana po kliknięciu w punkt w tabeli
 window.zoomToPoint = function(lat, lon, hip) {
-    // 1. Czyścimy poprzednie markery
+    // 1. Czyścimy markery i resetujemy stan przycisku
     markersLayer.clearLayers();
+    resetButtonState();
     
     // 2. Dodajemy tylko ten jeden konkretny marker
     var marker = L.circleMarker([lat, lon], {
@@ -104,6 +113,12 @@ function renderTable(points) {
     if (!tbody) return;
     tbody.innerHTML = "";
     
+    // AKTUALIZACJA LICZNIKA
+    var counter = document.getElementById("points-counter");
+    if (counter) {
+        counter.innerText = "Wyświetlono: " + points.length + " punktów";
+    }
+    
     var sortedPoints = points.slice().sort(function(a, b) {
         return a.hip.toString().localeCompare(b.hip.toString(), undefined, { numeric: true });
     });
@@ -111,25 +126,88 @@ function renderTable(points) {
     for (var i = 0; i < sortedPoints.length; i++) {
         var p = sortedPoints[i];
         var tr = document.createElement("tr");
-        // Przekazujemy również numer HIP do funkcji zoomToPoint
         var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\"); return false;'>" + p.hip + "</a></td>";
         tr.innerHTML = html;
         tbody.appendChild(tr);
     }
 }
 
-function setupTableSearch() {
+function setupInterface() {
     var table = document.querySelector("#points-table");
     if (!table) return;
 
+    var container = document.createElement("div");
+    container.style.marginBottom = "10px";
+
+    // 1. Przycisk Pokaż/Ukryj wszystkie
+    var toggleBtn = document.createElement("button");
+    toggleBtn.id = "toggle-all-btn";
+    toggleBtn.innerText = "Pokaż wszystkie punkty na mapie";
+    toggleBtn.style.display = "block";
+    toggleBtn.style.width = "100%";
+    toggleBtn.style.padding = "8px";
+    toggleBtn.style.marginBottom = "10px";
+    toggleBtn.style.cursor = "pointer";
+    toggleBtn.style.backgroundColor = "#007bff";
+    toggleBtn.style.color = "white";
+    toggleBtn.style.border = "none";
+    toggleBtn.style.borderRadius = "4px";
+
+    toggleBtn.addEventListener("click", function() {
+        if (!areAllPointsVisible) {
+            // Pokaż wszystkie
+            markersLayer.clearLayers();
+            // Używamy filteredPoints jeśli istnieje (żeby pokazać tylko przefiltrowane), 
+            // w przeciwnym razie allPoints. Tutaj dla uproszczenia zawsze allPoints, 
+            // chyba że chcemy powiązać to z wyszukiwarką.
+            // Przyjmijmy wersję: pokazuje WSZYSTKIE dostępne dane.
+            
+            var pointsToShow = allPoints; 
+
+            pointsToShow.forEach(function(p) {
+                var marker = L.circleMarker([p.gps.lat, p.gps.lon], {
+                    radius: 4,
+                    color: "#ffffff",
+                    fillColor: "#dc3545", // Inny kolor dla widoku zbiorczego
+                    fillOpacity: 0.8,
+                    weight: 1
+                });
+                marker.bindPopup("<b>hip." + p.hip + "</b>");
+                markersLayer.addLayer(marker);
+            });
+            
+            toggleBtn.innerText = "Ukryj punkty";
+            areAllPointsVisible = true;
+        } else {
+            // Ukryj wszystkie
+            markersLayer.clearLayers();
+            toggleBtn.innerText = "Pokaż wszystkie punkty na mapie";
+            areAllPointsVisible = false;
+        }
+    });
+
+    // 2. Pole wyszukiwania
     var searchInput = document.createElement("input");
     searchInput.type = "text";
     searchInput.id = "table-search";
     searchInput.placeholder = "Filtruj listę punktów...";
-    searchInput.style = "width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;";
+    searchInput.style = "padding: 8px; width: 60%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;";
     
-    table.parentNode.insertBefore(searchInput, table);
+    // 3. Licznik punktów
+    var counterSpan = document.createElement("span");
+    counterSpan.id = "points-counter";
+    counterSpan.style.marginLeft = "10px";
+    counterSpan.style.fontWeight = "bold";
+    counterSpan.style.fontSize = "14px";
+    
+    // Składanie elementów
+    container.appendChild(toggleBtn);
+    container.appendChild(searchInput);
+    container.appendChild(counterSpan);
+    
+    table.parentNode.insertBefore(container, table);
 
+    // Obsługa szukania
     searchInput.addEventListener("input", function(e) {
         var term = e.target.value.toLowerCase();
         var filtered = allPoints.filter(function(p) {
@@ -146,16 +224,10 @@ fetch("hip.txt")
         if (data && data.hipy) {
             allPoints = data.hipy;
             
-            // Inicjalizujemy tylko tabelę i wyszukiwarkę
-            // NIE dodajemy tutaj markerów do mapy ani nie używamy fitBounds
-            setupTableSearch();
+            setupInterface(); // Nowa funkcja budująca UI
             renderTable(allPoints);
         }
     })
     .catch(function(err) {
         console.log("Blad wczytywania danych:", err);
     });
-
-
-
-
