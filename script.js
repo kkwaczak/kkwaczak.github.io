@@ -178,8 +178,12 @@ function renderTable(points) {
 
     for (var i = 0; i < sortedPoints.length; i++) {
         var p = sortedPoints[i];
+        var pointColor = defaultColor;
+        if (p.layer && layerColors[p.layer]) {
+            pointColor = layerColors[p.layer];
+        }
         var tr = document.createElement("tr");
-        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\", \"" + p.layer + "\"); return false;'>" + p.hip + "</a></td>";
+        var html = "<td><span style='display:inline-block;width:10px;height:10px;border-radius:50%;background-color:" + pointColor + ";margin-right:5px;'></span><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\", \"" + p.layer + "\"); return false;'>" + p.hip + "</a></td>";
         tr.innerHTML = html;
         tbody.appendChild(tr);
     }
