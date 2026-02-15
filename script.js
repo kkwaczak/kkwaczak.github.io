@@ -107,7 +107,7 @@ var layerColors = {
   "Plan Lindleya z lat 1900-1901": "#800080", // Fioletowy
   OSM: "#000000", // Czarny
 };
-var defaultColor = "#007bff";
+var defaultColor = "#999999";
 
 var baseMaps = {
   "Plan inwentaryzacji zniszczeń z lat 1945-1946": planBos,
