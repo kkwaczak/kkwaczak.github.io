@@ -54,6 +54,17 @@ var planBos = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_BO
 var plan1936 = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.PLAN_1936" }, commonOptions));
 var warszawaWektor = new L.PodkladWarszawski("", L.extend({ mapname: "DANE_WAWA.WARSZAWA_PODKLAD_WEKTOR" }, commonOptions));
 
+var layerColors = {
+    "Plan inwentaryzacji zniszczeń z lat 1945-1946": "#ff0000", // Czerwony
+    "Plan z 1936": "#ff8800", // Pomarańczowy
+    "Plan Lindleya z lat 1891-1908": "#008000", // Ciemnozielony
+    "Plan Lindleya z lat 1896-1906": "#00ff00", // Jasnozielony
+    "Plan Lindleya z lat 1897-1901": "#0000ff", // Niebieski (domyślny Lindley4)
+    "Plan Lindleya z lat 1900-1901": "#800080", // Fioletowy
+    "OSM": "#000000" // Czarny
+};
+var defaultColor = "#007bff";
+
 var baseMaps = {
     "Plan inwentaryzacji zniszczeń z lat 1945-1946": planBos,
     "Plan z 1936": plan1936,
@@ -90,14 +101,23 @@ function showAllPointsOnMap() {
     markersLayer.clearLayers();
     var latLngs = [];
 
+    
+
     allPoints.forEach(function(p) {
         var pos = [p.gps.lat, p.gps.lon];
         latLngs.push(pos);
+
+        var pointColor = defaultColor;
+        if (p.layer && layerColors[p.layer]) {
+            pointColor = layerColors[p.layer];
+        } else {
+            pointColor = "#999999"; 
+        }
         
         var marker = L.circleMarker(pos, {
             radius: 4,
             color: "#ffffff",
-            fillColor: "#dc3545",
+            fillColor: pointColor,
             fillOpacity: 0.8,
             weight: 1
         });
@@ -115,22 +135,32 @@ function showAllPointsOnMap() {
     if (btn) btn.innerText = "Ukryj punkty";
 }
 
-window.zoomToPoint = function(lat, lon, hip) {
+window.zoomToPoint = function(lat, lon, hip, layer) {
     markersLayer.clearLayers();
     resetButtonState();
     
+    var pointColor = defaultColor;
+    if (layer && layerColors[layer]) {
+        pointColor = layerColors[layer];
+    } else {
+        pointColor = "#999999"; 
+    }
+
     var marker = L.circleMarker([lat, lon], {
-        radius: 6,
+        radius: 8,
         color: "#ffffff",
-        fillColor: "#007bff",
+        fillColor: pointColor,
         fillOpacity: 0.9,
-        weight: 2
+        weight: 4
     });
     marker.bindPopup("<b>hip." + hip + "</b>");
     markersLayer.addLayer(marker);
     
     map.setView([lat, lon], 15);
     marker.openPopup();
+    marker.on("popupclose", function(e) {
+        markersLayer.clearLayers()
+    });
 };
 
 function renderTable(points) {
@@ -150,7 +180,7 @@ function renderTable(points) {
     for (var i = 0; i < sortedPoints.length; i++) {
         var p = sortedPoints[i];
         var tr = document.createElement("tr");
-        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\"); return false;'>" + p.hip + "</a></td>";
+        var html = "<td><a href='#' class='point-link' onclick='zoomToPoint(" + p.gps.lat + "," + p.gps.lon + ", \"" + p.hip + "\", \"" + p.layer + "\"); return false;'>" + p.hip + "</a></td>";
         tr.innerHTML = html;
         tbody.appendChild(tr);
     }
