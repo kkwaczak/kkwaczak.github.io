@@ -26,7 +26,6 @@ var crs2178 = new L.Proj.CRS("EPSG:2178", "+proj=tmerc +lat_0=0 +lon_0=21 +k=0.9
     origin: [warstwaKonfig.minX, warstwaKonfig.minY]
 });
 
-/* Definicja kafelkow */
 L.PodkladWarszawski = L.TileLayer.extend({
     getTileUrl: function(coords) {
         var x = coords.x;
@@ -151,7 +150,7 @@ window.zoomToPoint = function(lat, lon, hip, layer) {
         color: "#ffffff",
         fillColor: pointColor,
         fillOpacity: 0.9,
-        weight: 4
+        weight: 3
     });
     marker.bindPopup("<b>hip." + hip + "</b>");
     markersLayer.addLayer(marker);
@@ -234,7 +233,7 @@ function setupInterface() {
 }
 
 /* Wczytywanie danych z hip.txt */
-fetch("hip.txt")
+fetch("hip.json")
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data && data.hipy) {
