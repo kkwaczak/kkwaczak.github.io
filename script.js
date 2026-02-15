@@ -157,7 +157,7 @@ function showAllPointsOnMap() {
     }
 
     var marker = L.circleMarker(pos, {
-      radius: 4,
+      radius: 6,
       color: "#ffffff",
       fillColor: pointColor,
       fillOpacity: 0.8,
@@ -200,8 +200,9 @@ window.zoomToPoint = function (lat, lon, hip, layer) {
 
   map.setView([lat, lon], 15);
   marker.openPopup();
-  marker.on("popupclose", function (e) {
-    markersLayer.clearLayers();
+  marker.on("popupclose", async function (e) {
+    await setTimeout(2000);
+    marker.remove();
   });
 };
 
