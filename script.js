@@ -195,7 +195,7 @@ window.zoomToPoint = function (lat, lon, hip, layer) {
     fillOpacity: 0.9,
     weight: 3,
   });
-  marker.bindPopup("<b>hip." + hip + "</b>");
+  marker.bindPopup("<b>hip. " + hip + "</b>");
   markersLayer.addLayer(marker);
 
   map.setView([lat, lon], 15);
