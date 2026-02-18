@@ -163,7 +163,7 @@ function showAllPointsOnMap() {
       fillOpacity: 0.8,
       weight: 1,
     });
-    marker.bindPopup("<b>hip." + p.hip + "</b>");
+    marker.bindPopup("<b>hip. " + p.hip + "</b>");
     markersLayer.addLayer(marker);
   });
 
@@ -316,3 +316,4 @@ fetch("hip.json")
   .catch(function (err) {
     console.log("Blad wczytywania danych:", err);
   });
+
